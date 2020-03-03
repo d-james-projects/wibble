@@ -6,10 +6,11 @@ import (
 )
 
 type Proto struct {
-	a   string
-	b   net.IP
-	c   int
-	txt string
+	a       string
+	b       net.IP
+	c       int
+	txt     string
+	mSender Sender
 }
 
 type Pip struct {
@@ -18,18 +19,24 @@ type Pip struct {
 	txt string
 }
 
+/*
 func NewPip(t string) *Pip {
 	p := Pip{txt: t}
 	p.x = 0
 	p.y = 0
 	return &p
 }
-
+*/
 type RealClient struct{}
 
 type MyClientServices interface {
 	Dial(n, addr string) (net.Conn, error)
-	//	Close(*net.Conn)
+	//Close(*net.Conn)
+	PipToProto(pip Pip) *Proto
+}
+
+type Sender interface {
+	Send(conn *net.Conn) error
 }
 
 type MyClient struct {
@@ -57,6 +64,13 @@ func (r RealClient) PipToProto(pip Pip) *Proto {
 	return &p
 }
 
+func (p *Proto) Send(conn *net.Conn) error {
+	fmt.Printf("Call Send() for type %T\n", p)
+	fmt.Println("Make call to net for real this is fake one")
+	_, err := net.ResolveUDPAddr("realnet", "realaddress")
+	return err
+}
+
 func (c MyClient) startService(pip Pip, dest string) error {
 	//Connect udp
 	//conn, err := net.Dial("udp", dest)
@@ -68,7 +82,7 @@ func (c MyClient) startService(pip Pip, dest string) error {
 
 	//simple write
 	conn.Write([]byte("Hello from client"))
-	//todo PipToProto(pip).send(conn)
+	c.mClientServices.PipToProto(pip).mSender.Send(&conn)
 
 	return nil
 }

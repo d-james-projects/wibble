@@ -26,6 +26,12 @@ func (m *mockClient) Dial(n string, addr string) (net.Conn, error) {
 	return args.Get(0).(net.Conn), args.Error(1)
 }
 
+func (m *mockClient) PipToProto(pip Pip) *Proto {
+	fmt.Printf("Call PipToProto() for type %T\n", m)
+	args := m.Called(pip)
+	return args.Get(0).(*Proto)
+}
+
 func TestStartService(t *testing.T) {
 	p := "127.0.0.1:6789"
 	pip := Pip{1, 2, "terrier"}
