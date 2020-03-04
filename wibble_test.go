@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"testing"
@@ -27,7 +26,7 @@ func (m *mockClient) Dial(n string, addr string) (net.Conn, error) {
 }
 
 func (m *mockClient) PipToProto(pip Pip) *Proto {
-	fmt.Printf("Call PipToProto() for type %T\n", m)
+	fmt.Printf("Call PipToProto() for type %T\n", *m)
 	args := m.Called(pip)
 	return args.Get(0).(*Proto)
 }
@@ -35,10 +34,14 @@ func (m *mockClient) PipToProto(pip Pip) *Proto {
 func TestStartService(t *testing.T) {
 	p := "127.0.0.1:6789"
 	pip := Pip{1, 2, "terrier"}
-	c := RealClient{}
+	c := new(RealClient)
 	srvc := MyClient{c}
 
+	fmt.Println("========Call 1")
+
 	assert.Nil(t, srvc.startService(pip, p))
+
+	fmt.Println("========Call 2")
 
 	assert.NotNil(t, srvc.startService(pip, "wibble"))
 }
@@ -48,14 +51,20 @@ func TestStartServiceMocked(t *testing.T) {
 	//test := new(net.Conn)
 	obj, _ := net.Pipe()
 	defer obj.Close()
+	ptp := new(Proto)
 
 	c := new(mockClient)
 
-	//c.On("Dial", "udp", "127.0.0.1:6789").Return(obj, nil).Once()
-	c.On("Dial", "udp", "wobble").Return(obj, errors.New("bad net")).Once()
+	c.On("Dial", "udp", "127.0.0.1:6789").Return(obj, nil).Once()
+	//c.On("Dial", "udp", "wobble").Return(obj, errors.New("bad net")).Once()
+	c.On("PipToProto", pip).Return(ptp).Once()
 
 	srvc := MyClient{c}
-	srvc.startService(pip, "wobble")
+
+	//module under test
+	fmt.Println("========Call 3")
+	srvc.startService(pip, "127.0.0.1:6789")
+	//srvc.startService(pip, "wobble")
 
 	c.AssertExpectations(t)
 

@@ -6,11 +6,10 @@ import (
 )
 
 type Proto struct {
-	a       string
-	b       net.IP
-	c       int
-	txt     string
-	mSender Sender
+	a   string
+	b   net.IP
+	c   int
+	txt string
 }
 
 type Pip struct {
@@ -58,15 +57,15 @@ func (r RealClient) Close(conn *net.Conn) {
 
 func (r RealClient) PipToProto(pip Pip) *Proto {
 	fmt.Printf("Call PipToProto() for type %T\n", r)
-	p := Proto{}
+	p := new(Proto)
 	p.txt = "hello world"
 	p.c = 0
-	return &p
+	return p
 }
 
 func (p *Proto) Send(conn *net.Conn) error {
 	fmt.Printf("Call Send() for type %T\n", p)
-	fmt.Println("Make call to net for real this is fake one")
+	fmt.Println("Make a real call to the send func")
 	_, err := net.ResolveUDPAddr("realnet", "realaddress")
 	return err
 }
@@ -81,8 +80,9 @@ func (c MyClient) startService(pip Pip, dest string) error {
 	//defer c.mClientServices.Close(&conn)
 
 	//simple write
-	conn.Write([]byte("Hello from client"))
-	c.mClientServices.PipToProto(pip).mSender.Send(&conn)
+	//not called
+	//conn.Write([]byte("Hello from client"))
+	c.mClientServices.PipToProto(pip).Send(&conn)
 
 	return nil
 }
